@@ -13,7 +13,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN echo "deb http://ftp.fr.debian.org/debian/ wheezy main non-free contrib" > /etc/apt/sources.list
 RUN (apt-get update && apt-get upgrade -y -q && apt-get dist-upgrade -y -q && apt-get -y -q autoclean && apt-get -y -q autoremove)
-RUN apt-get install -y -q wget unzip vim ssh apache2 libapache2-mod-php5 php5-cli php5-mysql php5-gd php-pear php5-curl curl lynx-cur php5-xcache php5-imagick netpbm && rm -rf /var/lib/apt/lists/*
+RUN apt-get install -y -q wget unzip vim ssh apache2 libapache2-mod-php5 php5-cli php5-mysql php5-gd php-pear php5-curl curl lynx-cur php5-xcache imagick php5-imagick netpbm && rm -rf /var/lib/apt/lists/*
 
 # Configuration Apache
 
