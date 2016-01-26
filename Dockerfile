@@ -1,7 +1,7 @@
 # Docker SPIP
 # Pour Debian Jessie
 #
-# VERSION 0.0.7
+# VERSION 0.0.8
 #
 
 FROM debian:jessie
@@ -47,7 +47,8 @@ RUN wget http://files.spip.org/spip/stable/spip-3.1.zip \
 	&& chmod 777 /var/www/spip/config \
 	&& chown www-data:www-data -R /var/www/spip
 
-COPY apache-config.conf /etc/apache2/sites-enabled/000-default
+COPY apache-config.conf /etc/apache2/sites-enabled/000-default.conf
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 COPY start.sh /start.sh
 COPY stop.sh /stop.sh
