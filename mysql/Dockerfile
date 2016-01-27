@@ -1,7 +1,7 @@
 # Docker SPIP
 # Pour Debian Jessie
 #
-# VERSION 0.1.0
+# VERSION 0.1.1
 #
 
 FROM debian:jessie
@@ -47,13 +47,13 @@ RUN wget http://files.spip.org/spip/stable/spip-3.1.zip \
 	&& chmod 777 /var/www/spip/config \
 	&& chown www-data:www-data -R /var/www/spip
 
-COPY ../apache-config.conf /etc/apache2/sites-enabled/000-default.conf
+COPY configs/apache-config.conf /etc/apache2/sites-enabled/000-default.conf
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-COPY ../start.sh /start.sh
-COPY ../stop.sh /stop.sh
-COPY ../apache/docker-entrypoint.sh /entrypoint-apache.sh
-COPY ../mysql/docker-entrypoint.sh /entrypoint-mysql.sh
+COPY configs/start.sh /start.sh
+COPY configs/stop.sh /stop.sh
+COPY apache/docker-entrypoint.sh /entrypoint-apache.sh
+COPY mysql/docker-entrypoint.sh /entrypoint-mysql.sh
 
 RUN chmod +x /start.sh \
 	&& chmod +x /stop.sh \
