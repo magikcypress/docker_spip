@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: spip
+  labels:
+    app: spip
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: spip
+    tier: frontend
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: gluster-cluster
+subsets:
+- addresses:
+  - ip: 192.168.1.37
+  ports:
+  - port: 1
+    protocol: TCP
+- addresses:
+  - ip: 192.168.1.37
+  ports:
+  - port: 1
+    protocol: TCP
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: spip-pv-claim
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+  - ReadWriteOnce
+  glusterfs:
+    endpoints: gluster-cluster
+    path: /spip-pv-claim
+    readOnly: false
+  persistentVolumeReclaimPolicy: Delete
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: spip-pv-claim
+  labels:
+    app: spip
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: spip
+  labels:
+    app: spip
+spec:
+  selector:
+    matchLabels:
+      app: spip
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: spip
+        tier: frontend
+    spec:
+      containers:
+      - image: ipeos/spip:latest
+        name: spip
+        env:
+        - name: SPIP_DB_SERVER
+          value: sqlite3
+        # - name: SPIP_DB_HOST
+        #   value: mysql
+        # - name: SPIP_DB_PASSWORD
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: mysql-pass
+        #       key: password
+        ports:
+        - containerPort: 80
+          name: spip
+        volumeMounts:
+        - name: spip-persistent-storage
+          mountPath: /var/www/html
+      volumes:
+      - name: spip-persistent-storage
+        persistentVolumeClaim:
+          claimName: spip-pv-claim

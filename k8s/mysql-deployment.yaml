@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: spip-mysql
+  labels:
+    app: spip
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: spip
+    tier: mysql
+  clusterIP: None
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: gluster-cluster
+subsets:
+- addresses:
+  - ip: 192.168.1.37
+  ports:
+  - port: 1
+    protocol: TCP
+- addresses:
+  - ip: 192.168.1.37
+  ports:
+  - port: 1
+    protocol: TCP
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv-claim
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+  - ReadWriteOnce
+  glusterfs:
+    endpoints: gluster-cluster
+    path: /mysql-pv-claim
+    readOnly: false
+  persistentVolumeReclaimPolicy: Delete
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim
+  labels:
+    app: spip
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: spip-mysql
+  labels:
+    app: spip
+spec:
+  selector:
+    matchLabels:
+      app: spip
+      tier: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: spip
+        tier: mysql
+    spec:
+      containers:
+      - image: yobasystems/alpine-mariadb
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim
